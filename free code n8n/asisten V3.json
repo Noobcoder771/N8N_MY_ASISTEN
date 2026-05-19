@@ -1,0 +1,1063 @@
+{
+  "name": "asisten V3",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5a4e5a7f-3d5c-46a7-a96f-139a72710fc3",
+              "leftValue": "={{\n  (function() {\n    const webhookData = $('WAHA Trigger').first().json;\n    const payload = webhookData.payload || {};\n    const eventName = webhookData.event || \"\";\n\n    // 1. Blokir status ack (centang dua/read receipt)\n    if (eventName.includes('ack')) return \"TOLAK\"; \n\n    // 2. Blokir pesan dari diri sendiri\n    const fromMe = payload.fromMe || (payload.key && payload.key.fromMe) || false;\n    if (fromMe === true) return \"TOLAK\"; \n\n    // 3. FILTER GRUP ANTI-BUDEK\n    const from = payload.from || \"\";\n    if (from.includes('@g.us')) {\n      \n      // Ambil otomatis ID Bot (Nomor HP) dan LID Bot dari sistem\n      const botIdRaw = (webhookData.me && webhookData.me.id) ? webhookData.me.id.split('@')[0] : \"\";\n      const botLidRaw = (webhookData.me && webhookData.me.lid) ? webhookData.me.lid.split('@')[0] : \"\";\n      \n      const text = payload.body || \"\";\n      \n      // Satpam ngecek teks: Apakah ada tag pake Nomor HP ATAU pake LID?\n      const isMentionedText = (botIdRaw && text.includes('@' + botIdRaw)) || (botLidRaw && text.includes('@' + botLidRaw));\n      \n      // Satpam ngecek sistem (mentionedJid): Kita ubah seluruh payload jadi string biar gampang dicari\n      const payloadString = JSON.stringify(payload);\n      const isTaggedOfficial = (botIdRaw && payloadString.includes(botIdRaw)) || (botLidRaw && payloadString.includes(botLidRaw));\n\n      // Kalau dua identitas bot lu (HP & LID) nggak dipanggil sama sekali, TENDANG!\n      if (!isMentionedText && !isTaggedOfficial) {\n        return \"TOLAK\";\n      }\n    }\n\n    // Kalau di-tag (baik pake LID atau nomor), MASUK KE TRUE!\n    return \"LULUS\"; \n  })()\n}}",
+              "rightValue": "LULUS",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -48,
+        -208
+      ],
+      "id": "8f39ff26-150e-4ff5-ad45-08490126fba1",
+      "name": "satpam grub"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3a2b5d92-bc7f-42f0-90a3-4b90e1fe964c",
+              "leftValue": "={{ $json.stdout }}",
+              "rightValue": "LULUS",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        -16
+      ],
+      "id": "19aad0cf-2eb9-4951-9401-2219fae54049",
+      "name": "gembok spam"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('WAHA Trigger').first().json.payload.media ? $('WAHA Trigger').first().json.payload.media.mimetype : 'bukan_media' }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "eadef2ad-e758-4c03-a3c3-698399593103"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "783c5269-a718-4418-a55b-3f941b1ac2b1",
+                    "leftValue": "={{ $('WAHA Trigger').first().json.payload.body }}",
+                    "rightValue": "=/(buatkan|bikin|generate|tolong|coba).*(gambar|desain|ui|logo|lukisan)/i",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "81551d39-9074-4aa7-8c91-f308d0d4bf7e",
+                    "leftValue": "={{ $('WAHA Trigger').first().json.payload.body }}",
+                    "rightValue": "=/(buatkan|bikin|generate|tolong|coba).*(video|animasi)/i",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2ae3da93-108d-4e2f-916c-a497d29dee3f",
+                    "leftValue": 1,
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        -16
+      ],
+      "id": "a1c55c67-8e05-47fa-a788-7bcb1389f054",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =====================================================================\n// 1. TARIK MEMORI & CHAT ID (SEDOT LANGSUNG DARI SUMBER)\n// =====================================================================\nlet history_lama = [];\nlet chatId = \"\";\nlet pesanBaru = \"\";\n\n// --- Tarik Memori Langsung dari Terminal (Bypass Sortir) ---\ntry {\n  // Ambil teks JSON mentah hasil dari command 'cat'\n  let teksMentah = $('memory masuk').first().json.stdout || \"[]\";\n  let rawHistory = JSON.parse(teksMentah.trim());\n  \n  if (Array.isArray(rawHistory)) {\n      // Bersihkan system prompt dari masa lalu\n      history_lama = rawHistory.filter(msg => msg.role !== \"system\");\n  } else {\n      history_lama = [];\n  }\n} catch (e) {\n  // Kalau file di CasaOS kosong/error, mulai dari nol\n  history_lama = [];\n}\n\n// --- Tarik Chat ID Mentah (@lid) ---\ntry {\n  let wahaNode = $('WAHA Trigger').first().json;\n  if (wahaNode.payload && wahaNode.payload.from) {\n      chatId = wahaNode.payload.from; \n      pesanBaru = wahaNode.payload.body || \"\"; \n  } else if (wahaNode.body && wahaNode.body.from) {\n      chatId = wahaNode.body.from;\n      pesanBaru = wahaNode.body.body || \"\"; \n  } else {\n      chatId = \"Data_From_Kosong\"; \n  }\n} catch (e) {\n  chatId = \"ERROR_NAMA_NODE_TRIGGER_SALAH\";\n}\n// =====================================================================\n// 2. AMBIL HASIL PENCARIAN GOOGLE (Node: search enggine)\n// =====================================================================\nlet contextInfo = \"\";\nlet searchResults = null;\n\ntry {\n  let serperNode = $('search enggine').first(); \n  if (serperNode && serperNode.json && serperNode.json.organic) {\n    searchResults = serperNode.json.organic;\n  }\n} catch (error) {\n  searchResults = null; \n}\n\nif (searchResults && searchResults.length > 0) {\n  contextInfo = searchResults.slice(0, 5).map(res => {\n    return `Title: ${res.title}\\nContent: ${res.snippet}\\nLink: ${res.link}`;\n  }).join(\"\\n\\n=================\\n\\n\");\n}\n\n// =====================================================================\n// 3. GABUNGKAN PESAN BARU DENGAN DATA GOOGLE\n// =====================================================================\nlet finalUserMessage = pesanBaru;\n\nif (contextInfo !== \"\") {\n    finalUserMessage += `\\n\\n[SYSTEM DATA: REAL-TIME INTERNET SEARCH RESULTS]\\n${contextInfo}\\n\\nInstruction: Provide a comprehensive answer based on the data above. If a location is mentioned, include estimated pricing and a Google Maps link.`;\n}\n\n// =====================================================================\n// 4. SYSTEM PROMPT (Persona Aria) - TIDAK DIRUBAH SAMA SEKALI\n// =====================================================================\nlet systemPrompt = `You are Aria, an authentic, supportive, and witty AI assistant. \n\nCORE PERSONALITY:\n- Tone: Adaptive, cool, and peer-like. \n- Wit: Use subtle humor regarding tech or gold trading.\n- Empathy: Validate Fauzan's feelings, but correct significant misinformation gently.\n\nSTRICT OPERATIONAL RULES:\n1. OUTPUT LANGUAGE: Always respond in INDONESIAN (Bahasa Indonesia) using a relaxed/casual style (Gaya bahasa santai).\n2. MEMORY: Utilize the provided conversation history. NEVER claim you don't remember previous messages.\n3. PLACE DETAILS: If asked about a location, provide:\n   - Estimated price range (e.g., \"Mulai dari Rp 25.000\").\n   - A direct Google Maps link.\n4. SOCIAL MEDIA: Provide URLs as PLAIN TEXT only. Do NOT use markdown links [text](url). \n5. FORMATTING: Use bullet points for readability.`;\n\n// =====================================================================\n// 5. RAKIT ARRAY MESSAGES (URUTAN WAJIB: SYSTEM -> HISTORY LAMA -> PESAN BARU)\n// =====================================================================\nlet finalMessages = [];\n\n// A. Taruh System Prompt di posisi paling atas (otak utama)\nfinalMessages.push({ role: \"system\", content: systemPrompt });\n\n// B. Masukkan History Lama (Dibatasi 10 terakhir agar STB/API tidak jebol)\nlet limitedHistory = history_lama.slice(-10);\nfinalMessages = finalMessages.concat(limitedHistory);\n\n// C. Masukkan Pesan User Hari Ini di posisi paling bawah\nif (finalUserMessage.trim() !== \"\") {\n    finalMessages.push({ role: \"user\", content: finalUserMessage });\n} else if (limitedHistory.length === 0) {\n    // Fallback darurat jika pesan kosong\n    finalMessages.push({ role: \"user\", content: \"Halo\" }); \n}\n\n// =====================================================================\n// 6. KIRIM KE NODE SELANJUTNYA (Format Standar n8n)\n// =====================================================================\nreturn {\n  json: {\n    chat_id: chatId,\n    messages: finalMessages\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        304
+      ],
+      "id": "fa7b28ce-fbc2-4120-b5c0-ac09684dc9fd",
+      "name": "Prompt"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.3.253:1337/v1/chat/completions",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "default"
+            },
+            {
+              "name": "messages",
+              "value": "={{ $json.messages }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        704,
+        304
+      ],
+      "id": "b324e663-6c0a-460c-8e83-e9a5829b8680",
+      "name": "AI"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f01b1e0f-93be-4fc5-b720-13c37b7adcd2",
+              "leftValue": "={{ /harga|berita|news|update|cuaca|siapa|apa itu|pengertian|berapa|kapan|dimana|bagaimana|xau|usd|emas|saham|crypto|analisa|cara|wisata|rekomendasi|glamping|lokasi|alamat|hotel|tiket|terbaru|terkini|hari ini|jadwal|hasil|skor|review|spesifikasi|vs|lirik|makna lagu|resep|tutorial/i.test(String($('WAHA Trigger').first().json.payload.body)) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        320
+      ],
+      "id": "ee92fcf8-eab8-4676-b8e7-7e1de5e1cb14",
+      "name": "sortir"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://google.serper.dev/{{ $('WAHA Trigger').first().json.payload.body.toLowerCase().includes('berita') ? 'news' : ($('WAHA Trigger').first().json.payload.body.toLowerCase().includes('gambar') || $('WAHA Trigger').first().json.payload.body.toLowerCase().includes('foto') ? 'images' : 'search') }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-KEY",
+              "value": "80fa242d064651be35cf46adc81c848e422639f9"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $('WAHA Trigger').first().json.payload.body }}"
+            },
+            {
+              "name": "type",
+              "value": "={{    (function() {     const teks = $('WAHA Trigger').first().json.payload.body.toLowerCase();     if (teks.includes(\"berita\")) {       return \"news\";     } else if (teks.includes(\"gambar\") || teks.includes(\"foto\")) {       return \"images\";     } else {       return \"search\";     }   })()  }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        192,
+        304
+      ],
+      "id": "8bcbaa21-21ae-42fa-ba3a-e55d944ae4d6",
+      "name": "search enggine"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =====================================================================\n// NODE: PROMPT VISION UNTUK HUGGING FACE (LLaVA)\n// =====================================================================\nlet chatId = \"Data_From_Kosong\";\nlet pesanBaru = \"\";\nlet base64Gambar = null;\nlet mimeTypeGambar = null;\n\n// 1. Tarik Data WAHA\ntry {\n  let wahaNode = $('WAHA Trigger').first().json;\n  if (wahaNode.payload && wahaNode.payload.from) {\n      chatId = wahaNode.payload.from;\n      pesanBaru = wahaNode.payload.body || \"\"; \n  }\n} catch (e) {}\n\n// 2. Tarik Gambar\ntry {\n  let nodeGambar = $('image').first(); \n  if (nodeGambar && nodeGambar.binary && nodeGambar.binary.data) {\n      base64Gambar = nodeGambar.binary.data.data;\n      mimeTypeGambar = nodeGambar.binary.data.mimeType;\n  }\n} catch (e) {}\n\n// 3. Setup Pertanyaan & Format Gambar\nlet pertanyaan = pesanBaru.trim() !== \"\" ? pesanBaru : \"Tolong analisis dan jelaskan gambar ini secara detail menggunakan bahasa Indonesia.\";\n\nlet gambarDataURI = \"\";\nif (base64Gambar) {\n    // Kita kirim Base64 mentahnya aja biar CloudFront nggak ngamuk\n    gambarDataURI = base64Gambar; \n}\n\n// 4. Kirim ke Node HTTP Request HF\nreturn {\n  chat_id: chatId,\n  pertanyaan: pertanyaan,\n  gambar_base64: gambarDataURI\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        176
+      ],
+      "id": "87cca372-9339-4f98-a5be-a6d067091440",
+      "name": "Prompt Vision"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://zanbi911-aria-vision-bot.hf.space/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llava\",\n  \"prompt\": \"{{ $json.pertanyaan }}\",\n  \"stream\": false,\n  \"images\": [\n    \"{{ $json.gambar_base64.replace(/[^A-Za-z0-9+/=]/g, '') }}\"\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1008,
+        176
+      ],
+      "id": "96ae303b-7b90-4d42-ac2e-ed76c5669251",
+      "name": "Llava"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://image.pollinations.ai/prompt/{{ encodeURIComponent($('prompt image').first().json.prompt) }}?model=flux",
+        "options": {}
+      },
+      "id": "db72c045-f276-4646-94f2-9c70b717459f",
+      "name": "Minta Gambar ke Kaggle",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1184,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Ambil teks asli dari WAHA Trigger\nlet originalText = $('HTTP Request1').first().json.responseData.translatedText || \"\";\n\n// 2. Bersihkan trigger basa-basi (kayak: \"tolong buatkan gambar...\")\nlet cleanPrompt = originalText.replace(/.*(buatkan|bikin|generate|tolong|coba).*(gambar|desain|ui|logo|lukisan|ilustrasi)\\s*/i, '').trim();\n\n// 3. Deteksi Jenis Permintaan\nlet isUI = originalText.toLowerCase().match(/(ui|ux|login page|dashboard|web|app|interface|website|desain|aplikasi)/i);\nlet isIllustration = originalText.toLowerCase().match(/(ilustrasi|illustration|kartun|anime|vektor|vector)/i);\n\nlet aestheticBumbu = \"\";\nlet styleUsed = \"\";\n\nif (isUI) {\n  // Bumbu khusus UI/UX: Kita bikin BANYAK PILIHAN biar nggak bosen!\n  const uiStyles = [\n    \", Glassmorphism style, frosted glass effect, modern aesthetic, soft pastel gradients, clean typography, high fidelity UI\",\n    \", Dark mode UI, neon accents, cyberpunk aesthetic, modern dashboard, sleek dark background, glowing data visualization\",\n    \", Neumorphism style, soft shadows, extruded UI elements, minimalist white and grey color palette, very clean and sharp\",\n    \", Apple iOS flat design style, minimalist, plenty of whitespace, rounded corners, professional enterprise application, clear fonts\",\n    \", Dribbble trending UI, vibrant gradient colors, 3D colorful icons, engaging layout, playful but professional web design\",\n    \", Clean corporate style, professional layout, blue and white color scheme, structured grid, highly readable UI\"\n  ];\n  \n  // Pilih gaya secara acak dari array di atas\n  let randomUI = uiStyles[Math.floor(Math.random() * uiStyles.length)];\n  \n  // Tambahin instruksi wajib biar teksnya kebaca\n  aestheticBumbu = randomUI + \", readable text placeholders, precise layout, sharp details\";\n  styleUsed = \"UI/UX (\" + randomUI.split(',')[1].trim() + \")\";\n\n} else if (isIllustration) {\n  // Bumbu khusus Ilustrasi\n  aestheticBumbu = \", professional digital illustration, vibrant colors, clean lines, detailed background, clear shapes\";\n  styleUsed = \"Illustration\";\n\n} else {\n  // Bumbu Fotorealistik (Sesuai request lu: Biasa aja, ga usah 8k, yang penting jelas & tajam)\n  aestheticBumbu = \", realistic, clear details, well-lit, sharp focus, good quality photography\";\n  styleUsed = \"Realistic (Standard)\";\n}\n\nlet finalPrompt = cleanPrompt + aestheticBumbu;\n\nreturn {\n  prompt: finalPrompt,\n  original_prompt: cleanPrompt,\n  style_used: styleUsed\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        0
+      ],
+      "id": "16a06bdc-3acd-4b2e-aedf-ec887cf6ff36",
+      "name": "prompt image"
+    },
+    {
+      "parameters": {},
+      "type": "@devlikeapro/n8n-nodes-waha.wahaTrigger",
+      "typeVersion": 202502,
+      "position": [
+        -272,
+        -224
+      ],
+      "id": "6a54f1e3-e63d-4a63-93f1-65a3496970a2",
+      "name": "WAHA Trigger",
+      "webhookId": "078afc56-319c-4626-891d-8c16b4831d0d"
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').first().json.session }}",
+        "chatId": "={{ $('WAHA Trigger').first().json.payload.from }}",
+        "text": "Aria Sedang Berifikir 🤖",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        160,
+        -176
+      ],
+      "id": "3419d5b3-7bf0-4a7a-b300-4e2eedc6fc93",
+      "name": "Reasoning",
+      "credentials": {
+        "wahaApi": {
+          "id": "vPyDfzFIZgfAxmvF",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').first().json.session }}",
+        "chatId": "={{ $('WAHA Trigger').first().json.payload.from }}",
+        "text": "Jangan Spam Yah,Tunggu 30 detik lagi!!!",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        -16,
+        80
+      ],
+      "id": "be26cc24-5856-4ed3-87bb-762270d8ac98",
+      "name": "Peringatan",
+      "credentials": {
+        "wahaApi": {
+          "id": "vPyDfzFIZgfAxmvF",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').first().json.session }}",
+        "chatId": "={{ $('WAHA Trigger').first().json.payload.from }}",
+        "text": "=={{ $json.message.content }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1232,
+        176
+      ],
+      "id": "27301809-e516-4ae0-bf8a-a11d871845fe",
+      "name": "baca gambar",
+      "credentials": {
+        "wahaApi": {
+          "id": "vPyDfzFIZgfAxmvF",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $('WAHA Trigger').first().json.session }}",
+        "chatId": "={{ $('WAHA Trigger').first().json.payload.from }}",
+        "text": "={{ $('AI').item.json.choices[0].message.content }}",
+        "requestOptions": {}
+      },
+      "type": "@devlikeapro/n8n-nodes-waha.WAHA",
+      "typeVersion": 202502,
+      "position": [
+        1360,
+        304
+      ],
+      "id": "b762de13-ac3b-4030-8941-10f7af05a701",
+      "name": "kirim text",
+      "credentials": {
+        "wahaApi": {
+          "id": "vPyDfzFIZgfAxmvF",
+          "name": "WAHA account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.3.253:6001/send",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"{{ $('Ekstrak Nomor HP Asli').item.json.TargetNomor.toString().length > 15 ? $('Ekstrak Nomor HP Asli').item.json.TargetNomor + '@g.us' : $('Ekstrak Nomor HP Asli').item.json.TargetNomor }}\",\n  \"message\": \"Ini mahakarya AI untukmu!\",\n  \"imageUrl\": \"https://image.pollinations.ai/prompt/{{ encodeURIComponent($('prompt image').first().json.prompt) }}?model=flux\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1104,
+        -160
+      ],
+      "id": "77e8950a-78bd-46b6-b4f4-a04e8f613531",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9755c2d3-14d1-4385-860b-f19ed5d47b35",
+              "leftValue": "={{ $json.payload.from }}",
+              "rightValue": "@lid",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "9ac3295a-1e14-4b6e-9ae8-2d579216151f",
+              "leftValue": "=",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        320,
+        -176
+      ],
+      "id": "59e1796f-2b17-4132-b8f7-cbe4c2b26a69",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Tembak langsung ke node \"WAHA Trigger\" buat ngambil data utuh\nconst webhookData = $('WAHA Trigger').first().json;\nconst payload = webhookData.payload || {};\n\n// 2. Misi Pencarian Nomor Asli (Harta Karun di remoteJidAlt)\nlet rawId = \"\";\n\n// Kita intip ke dalem payload._data.key buat nyari remoteJidAlt\nif (payload._data && payload._data.key && payload._data.key.remoteJidAlt) {\n    // Kalau harta karunnya (nomor asli) ketemu, pake ini!\n    rawId = payload._data.key.remoteJidAlt; \n} else {\n    // Kalau nggak ada (misal chat pribadi biasa), balik pake cara normal\n    rawId = payload.from || webhookData.lid || \"\";\n}\n\n// 3. Ekstrak angkanya saja (Menebas @s.whatsapp.net, @c.us, atau @lid)\nconst pureNumber = rawId.split('@')[0];\n\n// 4. Outputkan datanya dengan rapi\nreturn {\n  json: {\n    fileName: `${pureNumber}.txt`,\n    nomorAsli: pureNumber\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -192
+      ],
+      "id": "1d15d801-83d6-4f4d-9780-7dc67f076e3b",
+      "name": "Bikin Path File"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.file_path_waha }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -192
+      ],
+      "id": "fe47c1ab-c22d-45b9-8745-0798bf35c905",
+      "name": "Read/Write Files from Disk",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Cek apakah node \"Read File\" berhasil dapet isi teksnya\nlet nomorDariFile = \"\";\nif ($input.all().length > 0 && $input.first().json.data) {\n    nomorDariFile = $input.first().json.data;\n}\n\n// 2. Kalau file gak ketemu, pakai nomor cadangan yang udah kita buat di \"Bikin Path File\"\nlet nomorAkhir = nomorDariFile || $('Bikin Path File').first().json.nomorAsli;\n\n// 3. Sapu Bersih! Hapus spasi, enter, huruf, atau tanda @ biar murni cuma angka (628...)\nif (typeof nomorAkhir === 'string') {\n    nomorAkhir = nomorAkhir.replace(/[^0-9]/g, \"\"); \n}\n\n// 4. Kirim hasil bersihnya ke gerbang selanjutnya\nreturn [{\n    json: {\n        TargetNomor: nomorAkhir\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -192
+      ],
+      "id": "fa99e86d-8436-4a9f-b420-adb9c35de2f6",
+      "name": "Ekstrak Nomor HP Asli"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('WAHA Trigger').first().json.payload.media.url.replace('localhost', '192.168.3.253') }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "zan123"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        592,
+        176
+      ],
+      "id": "dcd7857b-68f2-4024-b7b1-ae5f5239a140",
+      "name": "image"
+    },
+    {
+      "parameters": {
+        "command": "=FILE=\"/tmp/gembok_{{ $json.payload.from }}.txt\"\nNOW=$(date +%s)\n\nif [ -f \"$FILE\" ]; then\n    FILE_TIME=$(stat -c %Y \"$FILE\")\n    DIFF=$((NOW - FILE_TIME))\n    if [ $DIFF -gt 30 ]; then\n        touch \"$FILE\"\n        echo \"LULUS\"\n    else\n        echo \"SPAM\"\n    fi\nelse\n    touch \"$FILE\"\n    echo \"LULUS\"\nfi"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        16,
+        -64
+      ],
+      "id": "6a30c2bb-0558-4daa-8f4d-eaf52693c055",
+      "name": "gembok"
+    },
+    {
+      "parameters": {
+        "command": "=cat /home/node/.n8n/history/{{ $('Ekstrak Nomor HP Asli').first().json.TargetNomor }}.json || echo \"[]\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        64
+      ],
+      "id": "62515129-26ff-4b36-bce9-70d7dcd14b16",
+      "name": "memory masuk"
+    },
+    {
+      "parameters": {
+        "command": "=rm -f \"/tmp/gembok_{{ $('WAHA Trigger').item.json.payload.from }}.txt\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        304
+      ],
+      "id": "0755e03c-90d0-4bbc-861f-8084735c6ab0",
+      "name": "gembok keluar"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1376,
+        0
+      ],
+      "id": "6fe8503a-043a-4bf3-86e2-a9361a4bc6d7",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "url": "https://api.mymemory.translated.net/get",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $('WAHA Trigger').first().json.payload.body }}"
+            },
+            {
+              "name": "langpair",
+              "value": "id|en"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        752,
+        0
+      ],
+      "id": "0b60f3cc-8df7-44e8-8ccb-45224419b5c3",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "command": "=rm -f \"/tmp/gembok_{{ $('WAHA Trigger').item.json.payload.from }}.txt\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        -160
+      ],
+      "id": "83b39689-ec53-4db1-9f88-7b6d462a5160",
+      "name": "Execute Command"
+    },
+    {
+      "parameters": {
+        "jsCode": "let history = [];\ntry {\n  let rawMemory = $('memory masuk').first().json.stdout || \"[]\";\n  history = JSON.parse(rawMemory.trim());\n  \n  // Kalau bukan array (misal file korup), kita reset\n  if (!Array.isArray(history)) {\n      history = [];\n  } else {\n      // Bersihkan kalau ada system prompt yang nyangkut dari masa lalu\n      history = history.filter(msg => msg.role !== \"system\");\n  }\n} catch (e) {\n  history = []; \n}\n\n// ==========================================================\n// INI DIA MESIN PEMOTONGNYA (BATASIN MEMORI)\n// Memotong array agar hanya menyisakan 4 baris obrolan terakhir\n// ==========================================================\nhistory = history.slice(-4);\n\n// Ambil pesan baru dari WA\nlet pesanBaru = $('WAHA Trigger').first().json.payload.body || \"\";\n\n// Masukkan pesan hari ini ke history paling bawah (menjadi baris ke-5)\nhistory.push({ role: \"user\", content: pesanBaru });\n\nreturn {\n  json: {\n    pesan_buat_ai: history\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        240
+      ],
+      "id": "fa6a5b8e-42fa-4bc3-b64a-b3d8742aac81",
+      "name": "Siapkan Prompt"
+    },
+    {
+      "parameters": {
+        "command": "=cat << 'EOF' > /home/node/.n8n/history/{{ $('Ekstrak Nomor HP Asli').first().json.TargetNomor }}.json\n{{ $('Bungkus Memori').item.json.konten_json }}\nEOF"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        304
+      ],
+      "id": "948780ed-dbd3-4e4f-a469-fff5f71cac80",
+      "name": "memory keluar"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ambil history yang tadi dikirim ke AI\nlet history = $('Siapkan Prompt').first().json.pesan_buat_ai;\n\n// Ambil jawaban AI yang baru keluar\nlet jawabanAI = $json.choices[0].message.content || \"\";\n\n// Tambahkan jawaban AI ke posisi paling bawah\nhistory.push({ role: \"assistant\", content: jawabanAI });\n\n// Jadikan string JSON utuh biar siap ditulis ke file\nreturn {\n  json: {\n    konten_json: JSON.stringify(history, null, 2)\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        304
+      ],
+      "id": "9cf822ca-7f98-47d9-94ca-0e470762eef2",
+      "name": "Bungkus Memori"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "satpam grub": {
+      "main": [
+        [
+          {
+            "node": "gembok",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "gembok spam": {
+      "main": [
+        [
+          {
+            "node": "Reasoning",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Peringatan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "memory masuk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI": {
+      "main": [
+        [
+          {
+            "node": "Bungkus Memori",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sortir": {
+      "main": [
+        [
+          {
+            "node": "search enggine",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search enggine": {
+      "main": [
+        [
+          {
+            "node": "Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt Vision": {
+      "main": [
+        [
+          {
+            "node": "Llava",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Llava": {
+      "main": [
+        [
+          {
+            "node": "baca gambar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Minta Gambar ke Kaggle": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prompt image": {
+      "main": [
+        [
+          {
+            "node": "Minta Gambar ke Kaggle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WAHA Trigger": {
+      "main": [
+        [],
+        [
+          {
+            "node": "satpam grub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "kirim text": {
+      "main": [
+        [
+          {
+            "node": "gembok keluar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Bikin Path File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Bikin Path File": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Ekstrak Nomor HP Asli",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ekstrak Nomor HP Asli": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "image": {
+      "main": [
+        [
+          {
+            "node": "Prompt Vision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gembok": {
+      "main": [
+        [
+          {
+            "node": "gembok spam",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reasoning": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "memory masuk": {
+      "main": [
+        [
+          {
+            "node": "Siapkan Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "prompt image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Siapkan Prompt": {
+      "main": [
+        [
+          {
+            "node": "sortir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "memory keluar": {
+      "main": [
+        [
+          {
+            "node": "kirim text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bungkus Memori": {
+      "main": [
+        [
+          {
+            "node": "memory keluar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e850a45a-e316-4c6f-8cca-08b5a4a84619",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "77c0b58a87491a2f8b0e78048d6fb0f5d55ec7175b01487f55f7da74a09b8864"
+  },
+  "id": "N8Qtfy2VfkyZaEgO",
+  "tags": []
+}
